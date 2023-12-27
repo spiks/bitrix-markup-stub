@@ -18,7 +18,7 @@ const svgSpritesBuilder = require('gulp-svg-sprite');
 const cheerio = require('gulp-cheerio');
 const plumber = require('gulp-plumber');
 
-const ghPages = require('gulp-gh-pages');
+const ghPages = require('gh-pages');
 
 function upLocalServer() {
   localServer.init({
@@ -175,15 +175,11 @@ function watching() {
   )
 }
 
-function setDevStage(finishTask) {
-  stageDirname = 'dev';
-
-  finishTask();
-};
-
-function deploy() {
-  return src(`./${stageDirname}/**/*`)
-    .pipe(ghPages({ branch: "build" }))
+function deploy(cb) {
+  ghPages.publish(`${stageDirname}`, {
+    branch: 'build',
+    message: 'update build',
+  }, cb);
 };
 
 exports.localServer = localServer
@@ -196,19 +192,16 @@ exports.copyResources = copyResources
 exports.buildSvgSprites = buildSvgSprites
 exports.deploy = deploy
 
-exports.default = series(
-  setDevStage,
-  parallel(
-    clean,
-    styles,
-    scripts,
-    copyResources,
-    buildSvgSprites(),
-    pugMaker,
-    pages,
-    upLocalServer,
-    watching,
-  ),
+exports.default = parallel(
+  clean,
+  styles,
+  scripts,
+  copyResources,
+  buildSvgSprites(),
+  pugMaker,
+  pages,
+  upLocalServer,
+  watching,
 );
 
 exports.build = series(
@@ -219,18 +212,7 @@ exports.build = series(
   buildSvgSprites(),
   pugMaker,
   pages,
-)
-
-exports.deploy = series(
-  clean,
-  styles,
-  scripts,
-  copyResources,
-  buildSvgSprites(),
-  pugMaker,
-  pages,
-  deploy
-)
+);
 
 
 
